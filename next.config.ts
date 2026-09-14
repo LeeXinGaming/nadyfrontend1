@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'daratopup-backend-1.onrender.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'nadybackend.onrender.com',
+      },
     ],
     unoptimized: true,
   },
@@ -36,6 +40,14 @@ const nextConfig: NextConfig = {
   // Fix turbopack root warning — point to the frontend directory
   turbopack: {
     root: __dirname,
+  },
+
+  // Never expose raw typescript source files or source maps in production F12 Sources tab
+  productionBrowserSourceMaps: false,
+
+  // Strip console.log statements in production builds to prevent leaking runtime details in F12 Console
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
 };
 
