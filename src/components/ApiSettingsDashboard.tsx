@@ -393,7 +393,7 @@ export default function ApiSettingsDashboard() {
                   required
                   value={settings.providerApiKey}
                   onChange={(e) => setSettings({ ...settings, providerApiKey: e.target.value })}
-                  placeholder="e.g. pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ"
+                  placeholder="e.g. pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m"
                   className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-white/15 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-pink-500 pr-24"
                 />
                 <div className="absolute right-2 flex items-center space-x-1">

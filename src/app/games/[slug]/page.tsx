@@ -347,22 +347,36 @@ export default function GameDetailsPage() {
 
   const zoneConfig = getGameZoneConfig(product);
 
+  const cleanPlayerId = playerId.trim();
+  const cleanZoneId = playerZoneId.trim().replace(/[()]/g, '');
+
+  // Whether player ID verification is finished and approved
+  const isIdCheckedDone = Boolean(
+    product &&
+    (product.hasCheckId === false
+      ? cleanPlayerId.length >= 3
+      : (playerProfile &&
+          playerProfile.nickname &&
+          playerProfile.playerId === cleanPlayerId &&
+          (!zoneConfig.hasZone || (playerProfile.playerZoneId || '') === cleanZoneId)))
+  );
+
   // Dedicated Check Name Action
-  const handlePerformCheckName = async () => {
+  const handlePerformCheckName = async (): Promise<PlayerProfile | null> => {
     const cleanId = playerId.trim();
     if (!cleanId || cleanId.length < 3) {
       setCheckNameError('សូមបញ្ចូល Player ID យ៉ាងតិច 3 ខ្ទង់ (Please enter a valid Player ID)');
-      return;
+      return null;
     }
     if (zoneConfig.required && (!playerZoneId.trim() || playerZoneId.trim().length < (zoneConfig.isServer ? 2 : 3))) {
       setCheckNameError(`សូមបញ្ចូល ${zoneConfig.label || 'Zone ID'} (Please enter ${zoneConfig.label || 'Zone ID'})`);
-      return;
+      return null;
     }
 
     if (product && product.hasCheckId === false) {
       const fallbackNick = `Player_${cleanId.slice(-4) || 'Direct'}`;
       setAutoNickname(fallbackNick);
-      setPlayerProfile({
+      const prof: PlayerProfile = {
         success: true,
         nickname: fallbackNick,
         playerId: cleanId,
@@ -370,12 +384,16 @@ export default function GameDetailsPage() {
         region: 'Direct Recharge',
         level: 1,
         avatarUrl: product.image || `/images/games/${slug}.png`,
-      });
-      return;
+      };
+      setPlayerProfile(prof);
+      setCheckNameError('');
+      setError('');
+      return prof;
     }
 
     setCheckingName(true);
     setCheckNameError('');
+    setError('');
     try {
       const profile = await lookupPlayerProfile(
         slug,
@@ -384,12 +402,23 @@ export default function GameDetailsPage() {
         product?.checkIdGameCode || undefined,
         product?.hasCheckId !== false
       );
-      if (profile) {
+      if (profile && profile.nickname) {
         setPlayerProfile(profile);
         setAutoNickname(profile.nickname);
+        setCheckNameError('');
+        setError('');
+        return profile;
+      } else {
+        setPlayerProfile(null);
+        setAutoNickname('');
+        setCheckNameError('រកមិនឃើញគណនីហ្គេមនេះទេ ឬ ID មិនត្រឹមត្រូវ (Player ID not found or invalid)');
+        return null;
       }
     } catch (err: any) {
-      setCheckNameError(err.message || 'មិនអាចផ្ទៀងផ្ទាត់ឈ្មោះបានទេ (Check name failed)');
+      setPlayerProfile(null);
+      setAutoNickname('');
+      setCheckNameError(err.message || 'រកមិនឃើញគណនីហ្គេមនេះទេ ឬ ID មិនត្រឹមត្រូវ (Player ID not found or invalid)');
+      return null;
     } finally {
       setCheckingName(false);
     }
@@ -439,12 +468,19 @@ export default function GameDetailsPage() {
           product?.checkIdGameCode || undefined,
           product?.hasCheckId !== false
         );
-        if (profile) {
+        if (profile && profile.nickname) {
           setPlayerProfile(profile);
           setAutoNickname(profile.nickname);
+          setCheckNameError('');
+        } else {
+          setPlayerProfile(null);
+          setAutoNickname('');
+          setCheckNameError('រកមិនឃើញគណនីហ្គេមនេះទេ ឬ ID មិនត្រឹមត្រូវ (Player ID not found or invalid)');
         }
-      } catch {
-        // Non-blocking auto check
+      } catch (err: any) {
+        setPlayerProfile(null);
+        setAutoNickname('');
+        setCheckNameError(err.message || 'រកមិនឃើញគណនីហ្គេមនេះទេ ឬ ID មិនត្រឹមត្រូវ (Player ID not found or invalid)');
       } finally {
         setCheckingName(false);
       }
@@ -454,8 +490,9 @@ export default function GameDetailsPage() {
   }, [playerId, playerZoneId, slug, zoneConfig.required, zoneConfig.isServer, product?.hasCheckId, product?.checkIdGameCode, product?.image]);
 
   const handleOrderSubmit = async () => {
-    if (!playerId) {
-      setError(t.nicknameRequired);
+    const cleanId = playerId.trim();
+    if (!cleanId) {
+      setError(t.nicknameRequired || 'សូមបញ្ចូល Player ID ជាមុនសិន (Please enter Player ID)');
       return;
     }
     if (zoneConfig.required && !playerZoneId.trim()) {
@@ -469,6 +506,26 @@ export default function GameDetailsPage() {
     if (!termsAccepted) {
       setError('សូមយល់ព្រមលើលក្ខខណ្ឌប្រតិបត្តិ និងគោលការណ៍ទិញមុននឹងបន្ត (Please accept terms & conditions).');
       return;
+    }
+
+    // MANDATORY ID CHECK: Cannot order unless Player ID has been verified
+    if (product && product.hasCheckId !== false) {
+      const cleanZone = playerZoneId.trim().replace(/[()]/g, '');
+      const isAlreadyVerified = Boolean(
+        playerProfile &&
+        playerProfile.nickname &&
+        playerProfile.playerId === cleanId &&
+        (!zoneConfig.hasZone || (playerProfile.playerZoneId || '') === cleanZone)
+      );
+
+      if (!isAlreadyVerified) {
+        setError('កំពុងពិនិត្យ Player ID មុននឹងបញ្ជាទិញ... (Verifying Player ID before ordering...)');
+        const verified = await handlePerformCheckName();
+        if (!verified || !verified.nickname) {
+          setError('⚠️ Player ID មិនត្រឹមត្រូវ ឬរកមិនឃើញគណនីហ្គេមនេះទេ។ ត្រូវតែពិនិត្យ ID ឱ្យបានជោគជ័យសិន ទើបអាចបញ្ជាទិញបាន! (Invalid Player ID. You must verify ID successfully before ordering!)');
+          return;
+        }
+      }
     }
 
     setError('');
@@ -653,6 +710,10 @@ export default function GameDetailsPage() {
                     value={playerId}
                     onChange={(e) => {
                       const val = e.target.value;
+                      setPlayerProfile(null);
+                      setAutoNickname('');
+                      setCheckNameError('');
+                      setError('');
                       const comboMatch = val.match(/^(\d{4,12})[\s_()\-]+(\d{3,6})\)?$/);
                       if (comboMatch && zoneConfig.hasZone) {
                         setPlayerId(comboMatch[1]);
@@ -675,7 +736,13 @@ export default function GameDetailsPage() {
                       type="text"
                       placeholder={zoneConfig.placeholder}
                       value={playerZoneId}
-                      onChange={(e) => setPlayerZoneId(e.target.value.replace(/[()]/g, ''))}
+                      onChange={(e) => {
+                        setPlayerProfile(null);
+                        setAutoNickname('');
+                        setCheckNameError('');
+                        setError('');
+                        setPlayerZoneId(e.target.value.replace(/[()]/g, ''));
+                      }}
                       className="w-full px-3.5 py-3 sm:py-2.5 theme-input border rounded-xl text-sm sm:text-base placeholder-slate-400 focus:outline-none focus:border-pink-500 min-h-[44px]"
                     />
                     {zoneConfig.isServer && zoneConfig.serverOptions && (
@@ -684,7 +751,13 @@ export default function GameDetailsPage() {
                           <button
                             key={srv}
                             type="button"
-                            onClick={() => setPlayerZoneId(srv)}
+                            onClick={() => {
+                              setPlayerProfile(null);
+                              setAutoNickname('');
+                              setCheckNameError('');
+                              setError('');
+                              setPlayerZoneId(srv);
+                            }}
                             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                               playerZoneId.toLowerCase() === srv.toLowerCase()
                                 ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md font-black'
@@ -747,6 +820,23 @@ export default function GameDetailsPage() {
                         <span>ពិនិត្យឈ្មោះគណនី & Zone ID (Check Player Profile)</span>
                       </>
                     )}
+                  </button>
+                </div>
+              )}
+
+              {/* Notice when ID entered but not verified yet */}
+              {product?.hasCheckId !== false && !checkingName && !isIdCheckedDone && playerId.trim().length >= 3 && !checkNameError && (
+                <div className="mt-3.5 flex items-center justify-between p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 text-xs font-bold animate-in fade-in">
+                  <div className="flex items-center space-x-2 min-w-0 flex-1 mr-2">
+                    <ShieldAlert className="h-4 w-4 text-amber-500 shrink-0" />
+                    <span className="truncate sm:whitespace-normal">ត្រូវពិនិត្យ Player ID ជាមុនសិនទើបអាចបញ្ជាទិញបាន (Check ID required)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePerformCheckName}
+                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-black shrink-0 transition-colors shadow-xs cursor-pointer"
+                  >
+                    ពិនិត្យឥឡូវនេះ
                   </button>
                 </div>
               )}
@@ -1079,16 +1169,44 @@ export default function GameDetailsPage() {
                   <div className="text-2xl sm:text-3xl font-black text-[#BE185D] leading-none mt-1">
                     ${selectedPackage ? selectedPackage.price.toFixed(2) : '0.00'}
                   </div>
+                  {/* Real-time verification status badge */}
+                  {product?.hasCheckId !== false && (
+                    <div className="mt-1 flex items-center gap-1">
+                      {isIdCheckedDone ? (
+                        <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3 text-emerald-500 shrink-0" />
+                          <span className="truncate max-w-[140px] sm:max-w-[200px]">ID បានពិនិត្យ: {playerProfile?.nickname || autoNickname}</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1">
+                          <ShieldAlert className="h-3 w-3 text-amber-500 shrink-0" />
+                          <span>ត្រូវពិនិត្យ ID ជាមុនសិន</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleOrderSubmit}
-                disabled={orderSubmitting || !selectedPackage}
-                className="px-6 sm:px-8 py-3 rounded-2xl bg-[#03c39a] hover:bg-[#02b18b] text-slate-950 font-black text-sm sm:text-base flex items-center space-x-1.5 shadow-lg shadow-[#03c39a]/25 transition-all duration-200 active:scale-95 cursor-pointer disabled:opacity-50"
+                disabled={orderSubmitting || !selectedPackage || checkingName}
+                className={`px-6 sm:px-8 py-3 rounded-2xl font-black text-sm sm:text-base flex items-center space-x-1.5 shadow-lg transition-all duration-200 active:scale-95 cursor-pointer disabled:opacity-50 ${
+                  product?.hasCheckId !== false && !isIdCheckedDone
+                    ? 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-amber-400/25'
+                    : 'bg-[#03c39a] hover:bg-[#02b18b] text-slate-950 shadow-[#03c39a]/25'
+                }`}
               >
-                <span>{orderSubmitting ? 'ដំណើរការ...' : 'បញ្ជាទិញ'}</span>
+                <span>
+                  {orderSubmitting 
+                    ? 'ដំណើរការ...' 
+                    : checkingName 
+                    ? 'កំពុងពិនិត្យ ID...' 
+                    : (product?.hasCheckId !== false && !isIdCheckedDone)
+                    ? 'ពិនិត្យ ID & បញ្ជាទិញ'
+                    : 'បញ្ជាទិញ'}
+                </span>
                 <span className="text-base font-bold">›</span>
               </button>
             </div>

@@ -200,16 +200,44 @@ export default function LoginPage() {
     return () => { subscription.unsubscribe(); };
   }, []);
 
-  // ─── Google OAuth Popup Flow ──────────────────────────────────────────────
+  // ─── Google OAuth Popup Flow (fallback) ──────────────────────────────────────
   const openGoogleOAuthDirect = () => {
     if (typeof window === 'undefined') return;
-    const redirectUri = window.location.origin + '/login';
-    const state = 'oauth_' + Math.random().toString(36).substring(2, 15);
-    try { sessionStorage.setItem('oauth_state', state); } catch {}
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent('openid email profile')}&state=${encodeURIComponent(state)}&prompt=select_account`;
-    const popup = window.open(authUrl, 'google_login_popup', `width=500,height=620,left=${(window.outerWidth - 500) / 2},top=${(window.outerHeight - 620) / 2}`);
-    if (!popup) window.location.href = authUrl;
+    // Use GSI token client (avoids redirect_uri_mismatch issues)
+    if (window.google?.accounts?.oauth2) {
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'openid email profile',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse?.error) {
+              setError('Google sign-in was cancelled or failed.');
+              setGoogleLoading(false);
+              return;
+            }
+            if (tokenResponse?.access_token) {
+              try {
+                const result = await loginWithGoogle(tokenResponse.access_token);
+                handleAuthSuccess(result);
+              } catch (e: any) {
+                setError(e?.message || 'Google login failed');
+                setGoogleLoading(false);
+              }
+            }
+          },
+        });
+        tokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (e) {
+        console.warn('GSI token client fallback error:', e);
+      }
+    }
+    // Last resort: GSI id flow
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.prompt();
+    }
   };
+
 
   const handleGoogleClick = async () => {
     setError(''); setSuccess('');

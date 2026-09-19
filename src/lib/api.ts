@@ -1,5 +1,5 @@
 const LOCAL_API = 'http://localhost:5001';
-const PRODUCTION_API = 'https://kvmvddsbotnet.onrender.com';
+const PRODUCTION_API = 'https://nadystore-backend.onrender.com';
 
 /**
  * Resolves the active backend API base URL.
@@ -1572,12 +1572,12 @@ export interface ProviderDepositResult {
   pay_url?: string;
 }
 
-export async function fetchProviderProfile(stock: 1 | 2 = 2): Promise<ProviderProfile> {
+export async function fetchProviderProfile(stock: 1 | 2 = 1): Promise<ProviderProfile> {
   const url = stock === 2 ? '/api/v1/game2/profile' : '/api/v1/game/profile';
   const res = await fetch(url, {
     headers: {
       'Accept': 'application/json',
-      'X-API-Key': 'pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ'
+      'X-API-Key': 'pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m'
     },
     cache: 'no-store'
   });
@@ -1589,7 +1589,7 @@ export async function checkPlayerIdViaProvider(
   game: string,
   userid: string,
   zoneid?: string,
-  stock: 1 | 2 = 2
+  stock: 1 | 2 = 1
 ): Promise<ProviderCheckIdResult> {
   const base = stock === 2 ? '/api/v1/game2/check_id' : '/api/v1/game/check_id';
   const q = new URLSearchParams({
@@ -1603,32 +1603,32 @@ export async function checkPlayerIdViaProvider(
   const res = await fetch(`${base}?${q.toString()}`, {
     headers: {
       'Accept': 'application/json',
-      'X-API-Key': 'pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ'
+      'X-API-Key': 'pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m'
     }
   });
   return await res.json();
 }
 
-export async function fetchProviderCategories(stock: 1 | 2 = 2): Promise<any> {
+export async function fetchProviderCategories(stock: 1 | 2 = 1): Promise<any> {
   const url = stock === 2 ? '/api/v1/game2/categories' : '/api/v1/game/categories';
   const res = await fetch(url, {
     headers: {
       'Accept': 'application/json',
-      'X-API-Key': 'pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ'
+      'X-API-Key': 'pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m'
     }
   });
   if (!res.ok) throw new Error(`Failed to fetch categories (${res.status})`);
   return await res.json();
 }
 
-export async function fetchProviderProducts(gameCode: string, stock: 1 | 2 = 2): Promise<any> {
+export async function fetchProviderProducts(gameCode: string, stock: 1 | 2 = 1): Promise<any> {
   const url = stock === 2
     ? `/api/v1/game2/products?game_code=${encodeURIComponent(gameCode)}`
     : `/api/v1/game/products?game_code=${encodeURIComponent(gameCode)}`;
   const res = await fetch(url, {
     headers: {
       'Accept': 'application/json',
-      'X-API-Key': 'pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ'
+      'X-API-Key': 'pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m'
     }
   });
   if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
@@ -1643,13 +1643,13 @@ export async function createProviderOrder(payload: {
   zone_id?: string;
   stock?: 1 | 2;
 }): Promise<any> {
-  const url = (payload.stock || 2) === 2 ? '/api/v1/game2/create_order' : '/api/v1/game/create_order';
+  const url = (payload.stock || 1) === 2 ? '/api/v1/game2/create_order' : '/api/v1/game/create_order';
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-API-Key': 'pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ'
+      'X-API-Key': 'pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m'
     },
     body: JSON.stringify({
       product_code: payload.product_code,
@@ -1662,27 +1662,27 @@ export async function createProviderOrder(payload: {
   return await res.json();
 }
 
-export async function checkProviderOrder(reference: string, stock: 1 | 2 = 2): Promise<any> {
+export async function checkProviderOrder(reference: string, stock: 1 | 2 = 1): Promise<any> {
   const url = stock === 2
     ? `/api/v1/game2/check_order?reference=${encodeURIComponent(reference)}`
     : `/api/v1/game/check_order?reference=${encodeURIComponent(reference)}`;
   const res = await fetch(url, {
     headers: {
       'Accept': 'application/json',
-      'X-API-Key': 'pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ'
+      'X-API-Key': 'pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m'
     }
   });
   return await res.json();
 }
 
-export async function depositProviderBalance(amount: number, currency = 'USD', stock: 1 | 2 = 2): Promise<ProviderDepositResult> {
+export async function depositProviderBalance(amount: number, currency = 'USD', stock: 1 | 2 = 1): Promise<ProviderDepositResult> {
   const url = stock === 2 ? '/api/v1/game2/deposit' : '/api/v1/game/deposit';
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-API-Key': 'pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ'
+      'X-API-Key': 'pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m'
     },
     body: JSON.stringify({ amount, currency })
   });

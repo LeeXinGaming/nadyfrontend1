@@ -50,13 +50,10 @@ const SANDBOX_ACCOUNTS: Record<string, Record<string, string>> = {
 async function queryVngzzCheckId(gameCode: string, userId: string, zoneId?: string) {
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001').replace(/\/+$/, '');
   const rawKey = process.env.VNGZZ2GAME_API_KEY;
-  const apiKey = (rawKey && rawKey !== 'your-provider-api-key') ? rawKey : 'pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ';
+  const apiKey = (rawKey && rawKey !== 'your-provider-api-key') ? rawKey : 'pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m';
   const candidateBases = [
-    `${backendUrl}/api/v1/game2`,
     `${backendUrl}/api/v1/game`,
-    process.env.VNGZZ2GAME_GAME2_URL || 'https://www.vngzz2game.site/api/v1/game2',
     process.env.VNGZZ2GAME_API_URL || 'https://www.vngzz2game.site/api/v1/game',
-    'https://www.vngzz2game.site/api/v1/game2',
     'https://www.vngzz2game.site/api/v1/game',
   ];
   const uniqueBases = Array.from(new Set(candidateBases));
@@ -67,7 +64,7 @@ async function queryVngzzCheckId(gameCode: string, userId: string, zoneId?: stri
       vngUrl += `&zone_id=${encodeURIComponent(zoneId)}&zoneid=${encodeURIComponent(zoneId)}&server_id=${encodeURIComponent(zoneId)}&serverid=${encodeURIComponent(zoneId)}`;
     }
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1800);
+    const timer = setTimeout(() => controller.abort(), 4500);
     const vngRes = await fetch(vngUrl, {
       headers: { 'X-API-Key': apiKey, 'Accept': 'application/json' },
       signal: controller.signal,
@@ -345,7 +342,7 @@ async function handleLookup(req: NextRequest) {
 
       // 1. Direct VNGZZ2GAME Official Partner API
       const gameCode = rawGameSlug.toLowerCase().includes('global') ? 'mlbb_global' : 'mlbb';
-      const mlCodes = ['mlbb_special', 'mobile_legends', gameCode, 'ml', 'moonton_mlbb'];
+      const mlCodes = ['mlbb_special', 'mlbb_exclusive', 'mobile_legends', gameCode, 'ml', 'moonton_mlbb'];
 
       for (const code of mlCodes) {
         const found = await queryVngzzCheckId(code, trimmedId, trimmedZone);

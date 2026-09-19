@@ -141,42 +141,9 @@ export default function Header() {
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden xl:flex items-center space-x-2 text-xs font-bold mr-2">
-              <Link
-                href="/"
-                className="px-2.5 py-1.5 rounded-lg text-slate-200 hover:text-white font-bold transition-colors"
-              >
-                {t.home}
-              </Link>
-              <button
-                type="button"
-                onClick={() => setFaqModalOpen(true)}
-                className="px-2.5 py-1.5 rounded-lg text-slate-200 hover:text-white font-bold transition-colors cursor-pointer"
-              >
-                {t.faq}
-              </button>
-              <Link
-                href="/contact"
-                className="px-2.5 py-1.5 rounded-lg text-slate-200 hover:text-pink-400 font-bold transition-colors"
-              >
-                {t.contact}
-              </Link>
-              <button
-                type="button"
-                onClick={() => setUpdatesModalOpen(true)}
-                className="px-3 py-1.5 rounded-full bg-[#0284c7] hover:bg-[#0369a1] text-white font-black flex items-center space-x-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
-              >
-                <Send className="h-3.5 w-3.5 fill-current -rotate-12" />
-                <span>{t.updates}</span>
-              </button>
-              <Link
-                href="/history"
-                className="px-2.5 py-1.5 rounded-lg text-slate-200 hover:text-white font-bold transition-colors"
-              >
-                {t.trackOrder}
-              </Link>
-              {mounted && isAdmin && (
+            {/* Desktop Navigation Links (Admin shortcut only) */}
+            {mounted && isAdmin && (
+              <nav className="hidden xl:flex items-center space-x-2 text-xs font-bold mr-2">
                 <Link
                   href="/admin"
                   className="px-3 py-1.5 rounded-full bg-violet-950/80 border border-violet-500/40 text-violet-400 hover:bg-violet-900/60 transition-all font-bold flex items-center space-x-1 text-xs"
@@ -184,8 +151,8 @@ export default function Header() {
                   <LayoutDashboard className="h-3.5 w-3.5" />
                   <span>Admin</span>
                 </Link>
-              )}
-            </nav>
+              </nav>
+            )}
 
             {/* Header Right Actions (Language Switcher & Menu) */}
             <div className="flex items-center gap-1.5 shrink-0 ml-auto z-10">
@@ -536,9 +503,9 @@ export default function Header() {
             </div>
 
 
-            {/* User Profile Card / Status */}
-            <div className="p-4 border-b border-slate-800">
-              {mounted && isLoggedIn ? (
+            {/* User Profile Card / Status (Only when logged in) */}
+            {mounted && isLoggedIn && (
+              <div className="p-4 border-b border-slate-800">
                 <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl">
                   <div className="flex items-center space-x-2.5">
                     <div className="h-9 w-9 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm border border-cyan-500/30">
@@ -554,25 +521,8 @@ export default function Header() {
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="p-3 bg-gradient-to-br from-cyan-950/50 to-violet-950/50 border border-cyan-500/30 rounded-2xl">
-                  <div className="text-xs font-bold text-white mb-1">
-                    Welcome to NA-DY TOPUP
-                  </div>
-                  <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
-                    Sign in to easily track your recharge invoices and digital codes.
-                  </p>
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full flex items-center justify-center space-x-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 text-white text-xs font-black shadow-sm glow-btn"
-                  >
-                    <span>{t.login} / Register</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Navigation List */}
             <div className="flex-1 p-3 space-y-1">
@@ -655,18 +605,6 @@ export default function Header() {
                 <div className="flex items-center space-x-3">
                   <Gamepad2 className="h-4 w-4 text-emerald-400" />
                   <span>{t.allProducts}</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-600" />
-              </Link>
-
-              <Link
-                href="/history"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between p-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition-all"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-cyan-400 font-black">📋</span>
-                  <span>{t.trackOrder}</span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-slate-600" />
               </Link>

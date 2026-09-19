@@ -27,7 +27,7 @@ const POPULAR_GAMES = [
 
 export default function ProviderGatewayDashboard() {
   // Stock Selection (1 or 2)
-  const [selectedStock, setSelectedStock] = useState<1 | 2>(2);
+  const [selectedStock, setSelectedStock] = useState<1 | 2>(1);
 
   // Profile / Reseller State
   const [profile, setProfile] = useState<ProviderProfile | null>(null);
@@ -398,12 +398,12 @@ export default function ProviderGatewayDashboard() {
                   <input
                     type="password"
                     readOnly
-                    value="pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ"
+                    value="pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m"
                     className="w-full px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-pink-300"
                   />
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText('pwArFcCneE0vcBDIGu6ZeIKHUZ3HxeQZ');
+                      navigator.clipboard.writeText('pwS5VEcfOkcN7skP5TRuWdUDdS9ZqG9m');
                       setCopiedLink(true);
                       setTimeout(() => setCopiedLink(false), 2000);
                     }}
@@ -425,8 +425,8 @@ export default function ProviderGatewayDashboard() {
               </div>
 
               <div className="pt-2 text-xs text-slate-400 space-y-1">
-                <p>• Header required: <code className="text-pink-300 font-mono">X-API-Key: pwArFc...</code></p>
-                <p>• Automatic failover: Queries Stock 2 first, automatically falls back to Stock 1 if busy.</p>
+                <p>• Header required: <code className="text-pink-300 font-mono">X-API-Key: pwS5VE...</code></p>
+                <p>• Automatic failover: Queries Stock 1 first, automatically falls back to Stock 2 if busy.</p>
                 <p>• In-game checkout lookup uses fast concurrent Promise caching for sub-500ms nickname response.</p>
               </div>
             </div>
